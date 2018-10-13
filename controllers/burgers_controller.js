@@ -1,30 +1,43 @@
-const express = require('express');
-const burger = require('../models/burger');
-const router = express.Router();
+// Node Dependencies
+var express = require('express');
+var router = express.Router();
+var burger = require('../models/burger.js');
 
-router.get('/', (req, res) => {
-    burger.all((data) => {
-        let allBurgers = {
-            burgers: data
-        };
-        res.render('index', allBurgers);
-    });
+
+// Create routes
+// ----------------------------------------------------
+// Index Redirect
+router.get('/', function (req, res) {
+  res.redirect('/index');
 });
 
-router.post('/api/burgers', (req, res) => {
-    burger.insert([req.body.burger_name], (result) => {
-        res.json({ id: result.insertId });
-    });
+
+// Index Page (render all burgers to DOM)
+router.get('/index', function (req, res) {
+  burger.selectAll(function(data) {
+    var hbsObject = { burgers: data };
+    //console.log(hbsObject);
+    res.render('index', hbsObject);
+  });
 });
 
-router.put('/api/burgers/:id', (req, res) => {
-    let { id } = req.params;
-    burger.update(id, (result) => {
-        if (result.changedRows === 0) {
-            return res.status(404).end();
-        }
-        res.status(200).end();
-    });
+
+// Create a New Burger
+router.post('/burger/create', function (req, res) {
+  burger.insertOne(req.body.burger_name, function() {
+    res.redirect('/index');
+  });
 });
 
+
+// Devour a Burger
+router.post('/burger/eat/:id', function (req, res) {
+  burger.updateOne(req.params.id, function() {
+    res.redirect('/index');
+  });
+});
+// ----------------------------------------------------
+
+
+// Export routes
 module.exports = router;
